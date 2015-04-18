@@ -1,8 +1,8 @@
 <idea-plugin version="2">
   <id>com.yourcompany.unique.plugin.id</id>
   <name>TestChooser</name>
-  <version>1.0</version>
-  <vendor email="arturngomes@gmail.com" url="http://www.yourcompany.com">YourCompany</vendor>
+  <version>1.0.1</version>
+  <vendor email="arturngomes@gmail.com"></vendor>
 
   <description><![CDATA[
       Select which tests you want to run in android Espresso.

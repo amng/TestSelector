@@ -16,16 +16,27 @@ public class Loader extends JPanel{
     private boolean is_animating = false;
     Color spinner_color = Color.white;
 
+    /**Stop animation*/
     public void stop_animation(){
         this.is_animating = false;
     }
 
+    /**
+     *  Go to next animation state
+     *  1st state: no change in arc size
+     *  2nd state: arc grows
+     *  3rd state: arc shrink
+     */
     private void nextState(){
         this.current_state++;
         if(this.current_state > THIRD_STATE)
             this.current_state = FIRST_STATE;
     }
 
+    /**
+     * Do the animation having in account the states
+     * until the stop_animation method is called
+     */
     public void start_animation(){
         this.is_animating = true;
         new Thread(()->{
@@ -63,6 +74,9 @@ public class Loader extends JPanel{
         }).start();
     }
 
+    /**
+     * Draw the arc with the parameters changed in the animation thread
+     * */
     @Override
     public void paintComponent(Graphics graphics){
         super.paintComponent(graphics);

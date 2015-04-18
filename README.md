@@ -1,5 +1,5 @@
 # TestSelector
-Plugin for Android Studio so that it adds @Suppressed notation to android espresso tests you don't want to run or remove it case you want to.
+Plugin for Android Studio that adds @Suppressed notation to android espresso tests. This way you select which tests you want to run without the need to scroll over all the code.
 
 #### Current Version: 1.0.2
 

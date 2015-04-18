@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.yourcompany.unique.plugin.id</id>
   <name>TestChooser</name>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <vendor email="arturngomes@gmail.com"></vendor>
 
   <description><![CDATA[
@@ -9,6 +9,8 @@
     ]]></description>
 
   <change-notes><![CDATA[
+    - Added search box, which allows to filter tests using regex regular expressions.
+    - Added popupmenu to checkboxes to scroll to test. (right click popup on checkboxes)
     ]]>
   </change-notes>
 

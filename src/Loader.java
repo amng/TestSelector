@@ -83,9 +83,16 @@ public class Loader extends JPanel{
         Graphics2D g2 = (Graphics2D) graphics;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
-        int centerX = getWidth()/2;
-        int centerY = getHeight()/2;
-        int radius = getWidth()/2-10;
+        int width = getWidth();
+        int height = getHeight();
+        int centerX = width/2;
+        int centerY = height/2;
+
+        int radius = 0;
+        if(width < height)
+            radius = width/2-10;
+        else
+            radius = height/2-10;
         g2.setStroke(new BasicStroke(5, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER));
         g2.setColor(spinner_color);
         g2.draw(new Arc2D.Double(centerX, centerY,

@@ -6,30 +6,40 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.util.messages.MessageBusConnection;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 public class TestSelector implements FileEditorManagerListener, ToolWindowFactory {
-
+    //Cards
     private final String CARD_LOADING_TESTS = "loading";
     private final String CARD_NO_TESTS      = "no_tests";
     private final String CARD_TESTS         = "tests";
+
+    //Stuff that needs to be accessed from other places
+    private HintTextField search_field = new HintTextField(Constants.SEARCH_HINT);
     private JPanel main_panel = new JPanel();
     private JPanel tests_panel = new JPanel();
     private Loader loader = new Loader();
     private CardLayout layout = new CardLayout();
-    private MessageBusConnection connection;
     private int tests = 0;
     private Project project;
 
@@ -49,14 +59,12 @@ public class TestSelector implements FileEditorManagerListener, ToolWindowFactor
         initNoTests();
         initTests();
         loader.start_animation();
-        populate("");
     }
 
     /**
      * Function used to get all the tests asynchronously
-     * @param s the query string to filter the tests
      */
-    private void populate(String s) {
+    private void populate() {
         AsyncTask task = new AsyncTask() {
             @Override
             protected void onPreExecute() { //show loading animation while list is being populated
@@ -66,7 +74,7 @@ public class TestSelector implements FileEditorManagerListener, ToolWindowFactor
 
             @Override
             protected void doInBackground() { //fill the panel with the tests
-                SwingUtilities.invokeLater(() -> fillTests(s));
+                SwingUtilities.invokeLater(() -> fillTests());
             }
 
             @Override
@@ -86,9 +94,9 @@ public class TestSelector implements FileEditorManagerListener, ToolWindowFactor
 
     /**
      * Function used to create the list of checkboxes and add their listeners
-     * @param search the query string to filter the tests
      */
-    private void fillTests(String search) {
+    private void fillTests() {
+        search_field.setText("");
         tests_panel.removeAll();
         Pattern test_pattern = Pattern.compile("\\btest_.*\\b[(]", Pattern.CASE_INSENSITIVE);
         Pattern suppress_pattern = Pattern.compile("@Suppress\\b", Pattern.CASE_INSENSITIVE);
@@ -184,22 +192,57 @@ public class TestSelector implements FileEditorManagerListener, ToolWindowFactor
         }
     }
 
+    private void updateTests(DocumentEvent e){
+        try {
+            String query = e.getDocument().getText(0, e.getDocument().getLength());
+            for (int i = 0; i < tests_panel.getComponentCount(); i++) {
+                Pattern test_pattern = Pattern.compile(".*" + query + ".*", Pattern.CASE_INSENSITIVE);
+                if(test_pattern.matcher(((JCheckBox) tests_panel.getComponents()[i]).getText()).find()){
+                    tests_panel.getComponents()[i].setVisible(true);
+                }else{
+                    tests_panel.getComponents()[i].setVisible(false);
+                }
+            }
+        } catch (BadLocationException e1) {
+            e1.printStackTrace();
+        } catch (PatternSyntaxException e2){
+            //do nothing, just wait for the user to put a correct pattern
+        }
+    }
+
+    private DocumentListener searchListener(){
+        return  new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateTests(e);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateTests(e);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {}
+        };
+    }
+
     /** Initialize the tests gui */
     private void initTests(){
+        JPanel panel_search = new JPanel();
         JPanel panel_btns = new JPanel();
         JPanel panel = new JPanel();
+        //INIT the main panel
         panel.setLayout(new BorderLayout());
         tests_panel.setLayout(new BoxLayout(tests_panel, BoxLayout.PAGE_AXIS));
         JBScrollPane scrollPane = new JBScrollPane(tests_panel);
         scrollPane.getVerticalScrollBar().setBlockIncrement(16);
-        JLabel label = new JLabel("Choose the tests you want to run: ");
-        label.setFont(label.getFont().deriveFont(15f));
-        panel.add(label, BorderLayout.NORTH);
-        panel.add(panel_btns, BorderLayout.SOUTH);
         panel.add(scrollPane);
-        JButton all_btn = new JButton("Select All");
-        JButton none_btn = new JButton("Select None");
-        JButton refresh_btn = new JButton("Refresh");
+        //######################################################################
+        //INIT the buttons panel
+        JButton all_btn = new JButton(Constants.BTN_SELECT_ALL);
+        JButton none_btn = new JButton(Constants.BTN_SELECT_NONE);
+        JButton refresh_btn = new JButton(Constants.BTN_REFRESH);
         panel_btns.setLayout(new GridLayout(3,1));
         all_btn.addActionListener((ActionEvent e)->{
                     for (int i = 0; i < tests_panel.getComponentCount(); i++) {
@@ -207,32 +250,70 @@ public class TestSelector implements FileEditorManagerListener, ToolWindowFactor
                     }
                 }
         );
-        none_btn.addActionListener((ActionEvent e)->{
+        none_btn.addActionListener((ActionEvent e) -> {
                     for (int i = 0; i < tests_panel.getComponentCount(); i++) {
                         ((JCheckBox) tests_panel.getComponents()[i]).setSelected(false);
                     }
                 }
         );
-        refresh_btn.addActionListener((ActionEvent e)->
-                        populate("")
+        refresh_btn.addActionListener((ActionEvent e) ->
+                        populate()
         );
         panel_btns.add(all_btn);
         panel_btns.add(none_btn);
         panel_btns.add(refresh_btn);
+        //######################################################################
+        //INIT the search panel
+        panel_search.setLayout(new BorderLayout());
+        search_field.setOpaque(false);
+        search_field.setBackground(new Color(0,0,0,0));
+        search_field.getDocument().addDocumentListener(searchListener());
+        search_field.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        //http://www.programcreek.com/java-api-examples/index.php?api=com.intellij.openapi.util.IconLoader
+        final Icon icon=IconLoader.getIcon("/actions/close.png");
+        final Icon hoveredIcon=IconLoader.getIcon("/actions/closeHovered.png");
+        JButton cleartxt_btn = new JButton(icon);
+        cleartxt_btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                cleartxt_btn.setIcon(hoveredIcon);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                cleartxt_btn.setIcon(icon);
+            }
+        });
+        cleartxt_btn.setBackground(new Color(0, 0, 0, 0));
+        cleartxt_btn.addActionListener((ActionEvent e) -> search_field.setText(""));
+        cleartxt_btn.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
+        cleartxt_btn.setOpaque(false);
+        cleartxt_btn.setBorderPainted(false);
+        cleartxt_btn.setBackground(new JBColor(Color.WHITE, search_field.getBackground()));
+        Box.Filler b = (Box.Filler) Box.createHorizontalStrut(5);
+        b.setOpaque(false);
+        panel_search.add(b, BorderLayout.WEST);
+        panel_search.add(search_field);
+        panel_search.add(cleartxt_btn, BorderLayout.EAST);
+        panel_search.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
+        panel_search.setOpaque(false);
+        //######################################################################
         main_panel.add(panel, CARD_TESTS);
+        panel.add(panel_search, BorderLayout.NORTH);
+        panel.add(panel_btns, BorderLayout.SOUTH);
     }
 
     /** Initialize the no tests gui */
     private void initNoTests(){
         JPanel panel_btns = new JPanel();
-        panel_btns.setLayout(new GridLayout(1,1));
-        JButton refresh_btn = new JButton("Refresh");
+        panel_btns.setLayout(new GridLayout(1, 1));
+        JButton refresh_btn = new JButton(Constants.BTN_REFRESH);
         refresh_btn.addActionListener((ActionEvent e) ->
-                        populate("")
+                        populate()
         );
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
-        JLabel label = new JLabel("No tests to show :(");
+        JLabel label = new JLabel(Constants.NO_RESULTS);
         label.setFont(label.getFont().deriveFont(15f));
         label.setHorizontalAlignment(JLabel.CENTER);
         label.setVerticalAlignment(JLabel.CENTER);
@@ -261,9 +342,9 @@ public class TestSelector implements FileEditorManagerListener, ToolWindowFactor
     }
 
 
+
     @Override
-    public void fileOpened(FileEditorManager fileEditorManager, VirtualFile virtualFile) {
-    }
+    public void fileOpened(FileEditorManager fileEditorManager, VirtualFile virtualFile) {}
 
     @Override
     public void fileClosed(FileEditorManager fileEditorManager, VirtualFile virtualFile) {
@@ -272,6 +353,6 @@ public class TestSelector implements FileEditorManagerListener, ToolWindowFactor
 
     @Override
     public void selectionChanged(FileEditorManagerEvent fileEditorManagerEvent) {
-        populate("");
+        populate();
     }
 }

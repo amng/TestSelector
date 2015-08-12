@@ -17,4 +17,4 @@ Plugin for Android Studio that adds @Suppressed notation to android espresso/jun
 
 ![test selector preview](http://i.imgur.com/YIKmD1R.gif?1)
 
-[Download the .jar and install plugin from disk](https://github.com/amng/TestSelectorEspresso/blob/master/TestSelector.jar?raw=true)
+[Download the .jar and install plugin from disk](https://github.com/amng/TestSelector/raw/master/TestSelector.jar)

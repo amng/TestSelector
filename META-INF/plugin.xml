@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.yourcompany.unique.plugin.id</id>
   <name>TestChooser</name>
-  <version>1.0.2</version>
+  <version>1.1.0</version>
   <vendor email="arturngomes@gmail.com"></vendor>
 
   <description><![CDATA[
@@ -40,7 +40,7 @@
   </actions>
 
   <extensions defaultExtensionNs="com.intellij">
-    <toolWindow id="TestSelector" anchor="right" factoryClass="TestSelector">
+    <toolWindow id="TestSelector" anchor="right" factoryClass="Main">
     </toolWindow>
   </extensions>
 

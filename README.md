@@ -1,7 +1,11 @@
-# TestSelectorEspresso
-Plugin for Android Studio so that it adds @Suppressed notation to android espresso tests you don't want to run or remove it case you want to.
 
-#### Current Version: 1.0.2
+# TestSelector
+Plugin for Android Studio that adds @Suppressed notation to android espresso/junit tests. This way you select which tests you want to run without the need to scroll over all the code.
+
+#### Current Version: 1.1.0
+
+###### New in Version 1.1.0 (12/08/2015)
+- Added junit tests support
 
 ###### New in Version 1.0.2 (18/04/2015)
 - Added scroll to test
@@ -13,4 +17,4 @@ Plugin for Android Studio so that it adds @Suppressed notation to android espres
 
 ![test selector preview](http://i.imgur.com/YIKmD1R.gif?1)
 
-[Download the .jar and install plugin from disk](https://github.com/amng/TestSelectorEspresso/blob/master/TestSelectorEspresso.jar?raw=true)
+[Download the .jar and install plugin from disk](https://github.com/amng/TestSelectorEspresso/blob/master/TestSelector.jar?raw=true)
